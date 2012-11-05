@@ -15,6 +15,17 @@
  */
 package io.netty.channel.socket.http;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import io.netty.handler.codec.http.DefaultHttpRequest;
+import io.netty.handler.codec.http.DefaultHttpResponse;
+import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpResponse;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.HttpVersion;
+
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.Inet6Address;
@@ -24,17 +35,6 @@ import java.net.SocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
-
-import io.netty.buffer.ChannelBuffer;
-import io.netty.buffer.ChannelBuffers;
-import io.netty.handler.codec.http.DefaultHttpRequest;
-import io.netty.handler.codec.http.DefaultHttpResponse;
-import io.netty.handler.codec.http.HttpHeaders;
-import io.netty.handler.codec.http.HttpMethod;
-import io.netty.handler.codec.http.HttpRequest;
-import io.netty.handler.codec.http.HttpResponse;
-import io.netty.handler.codec.http.HttpResponseStatus;
-import io.netty.handler.codec.http.HttpVersion;
 
 /**
  * Utility class for creating http requests for the operation of the full duplex
@@ -90,12 +90,12 @@ final class HttpTunnelMessageUtils {
     }
 
     public static HttpRequest createSendDataRequest(SocketAddress host,
-            String cookie, ChannelBuffer data) {
+            String cookie, ByteBuf data) {
         return createSendDataRequest(convertToHostString(host), cookie, data);
     }
 
     public static HttpRequest createSendDataRequest(String host, String cookie,
-            ChannelBuffer data) {
+            ByteBuf data) {
         HttpRequest request =
                 createRequestTemplate(host, cookie, CLIENT_SEND_REQUEST_URI);
         request.setHeader(HttpHeaders.Names.CONTENT_LENGTH,
@@ -267,7 +267,7 @@ final class HttpTunnelMessageUtils {
         return createOKResponseTemplate(null);
     }
 
-    public static HttpResponse createRecvDataResponse(ChannelBuffer data) {
+    public static HttpResponse createRecvDataResponse(ByteBuf data) {
         return createOKResponseTemplate(data);
     }
 
@@ -280,10 +280,8 @@ final class HttpTunnelMessageUtils {
                 new DefaultHttpResponse(version, HttpResponseStatus.BAD_REQUEST);
         response.setHeader(HttpHeaders.Names.CONTENT_TYPE,
                 "text/plain; charset=\"utf-8\"");
-        ChannelBuffer reasonBuffer =
-                ChannelBuffers.wrappedBuffer(toBytes(reason));
-        response.setHeader(HttpHeaders.Names.CONTENT_LENGTH,
-                Integer.toString(reasonBuffer.readableBytes()));
+        ByteBuf reasonBuffer = Unpooled.wrappedBuffer(toBytes(reason));
+        response.setHeader(HttpHeaders.Names.CONTENT_LENGTH, Integer.toString(reasonBuffer.readableBytes()));
         response.setContent(reasonBuffer);
         return response;
     }
@@ -313,12 +311,12 @@ final class HttpTunnelMessageUtils {
                 status.equals(response.getStatus());
     }
 
-    private static HttpResponse createOKResponseTemplate(ChannelBuffer data) {
+    private static HttpResponse createOKResponseTemplate(ByteBuf data) {
         return createResponseTemplate(HttpResponseStatus.OK, data);
     }
 
     private static HttpResponse createResponseTemplate(
-            HttpResponseStatus status, ChannelBuffer data) {
+            HttpResponseStatus status, ByteBuf data) {
         HttpResponse response =
                 new DefaultHttpResponse(HttpVersion.HTTP_1_1, status);
         if (data != null) {

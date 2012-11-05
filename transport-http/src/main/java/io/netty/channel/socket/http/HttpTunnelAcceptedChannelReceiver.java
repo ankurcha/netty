@@ -15,7 +15,7 @@
  */
 package io.netty.channel.socket.http;
 
-import io.netty.buffer.ChannelBuffer;
+import io.netty.buffer.ByteBuf;
 
 /**
  * Interface from the server message switch and channel sink to an
@@ -29,7 +29,7 @@ interface HttpTunnelAcceptedChannelReceiver {
 
     void updateInterestOps(SaturationStateChange transition);
 
-    void dataReceived(ChannelBuffer data);
+    void dataReceived(ByteBuf data);
 
     void clientClosed();
 

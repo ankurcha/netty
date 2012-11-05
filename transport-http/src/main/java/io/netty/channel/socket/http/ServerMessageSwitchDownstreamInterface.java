@@ -15,7 +15,7 @@
  */
 package io.netty.channel.socket.http;
 
-import io.netty.buffer.ChannelBuffer;
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFuture;
 
 /**
@@ -26,7 +26,6 @@ interface ServerMessageSwitchDownstreamInterface {
 
     void serverCloseTunnel(String tunnelId);
 
-    void routeOutboundData(String tunnelId, ChannelBuffer data,
-                           ChannelFuture writeFuture);
+    void routeOutboundData(String tunnelId, ByteBuf data, ChannelFuture writeFuture);
 
 }

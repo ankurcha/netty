@@ -15,23 +15,23 @@
  */
 package io.netty.channel.socket.http;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import io.netty.buffer.ChannelBuffer;
-import io.netty.buffer.ChannelBuffers;
-
 /**
- * Provides functionality to split a provided ChannelBuffer into multiple fragments which fit
+ * Provides functionality to split a provided ByteBuf into multiple fragments which fit
  * under a specified size threshold.
  */
 final class WriteSplitter {
 
-    public static List<ChannelBuffer> split(ChannelBuffer buffer,
+    public static List<ByteBuf> split(ByteBuf buffer,
             int splitThreshold) {
         int listSize = (int) ((float) buffer.readableBytes() / splitThreshold);
-        ArrayList<ChannelBuffer> fragmentList =
-                new ArrayList<ChannelBuffer>(listSize);
+        ArrayList<ByteBuf> fragmentList =
+                new ArrayList<ByteBuf>(listSize);
 
         if (buffer.readableBytes() > splitThreshold) {
             int slicePosition = buffer.readerIndex();
@@ -39,12 +39,12 @@ final class WriteSplitter {
                 int chunkSize =
                         Math.min(splitThreshold, buffer.writerIndex() -
                                 slicePosition);
-                ChannelBuffer chunk = buffer.slice(slicePosition, chunkSize);
+                ByteBuf chunk = buffer.slice(slicePosition, chunkSize);
                 fragmentList.add(chunk);
                 slicePosition += chunkSize;
             }
         } else {
-            fragmentList.add(ChannelBuffers.wrappedBuffer(buffer));
+            fragmentList.add(Unpooled.wrappedBuffer(buffer));
         }
 
         return fragmentList;

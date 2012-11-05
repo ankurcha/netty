@@ -21,7 +21,6 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInputShutdownEvent;
 
 import java.net.Socket;
-import java.net.StandardSocketOptions;
 
 /**
  * A {@link ChannelConfig} for a {@link SocketChannel}.

@@ -15,6 +15,15 @@
  */
 package io.netty.channel.socket.http;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureAggregator;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.handler.codec.http.HttpResponse;
+import io.netty.logging.InternalLogger;
+import io.netty.logging.InternalLoggerFactory;
+
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Queue;
@@ -24,16 +33,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import io.netty.buffer.ChannelBuffer;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureAggregator;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.Channels;
-import io.netty.handler.codec.http.HttpResponse;
-import io.netty.logging.InternalLogger;
-import io.netty.logging.InternalLoggerFactory;
-
 /**
  * This is the gateway between the accepted TCP channels that are used to communicate with the client
  * ends of the http tunnel and the virtual server accepted tunnel. As a tunnel can last for longer than
@@ -41,7 +40,7 @@ import io.netty.logging.InternalLoggerFactory;
  * necessary.
  */
 class ServerMessageSwitch implements ServerMessageSwitchUpstreamInterface,
-        ServerMessageSwitchDownstreamInterface {
+                                     ServerMessageSwitchDownstreamInterface {
 
     private static final InternalLogger LOG = InternalLoggerFactory
             .getInstance(ServerMessageSwitch.class.getName());
@@ -105,8 +104,7 @@ class ServerMessageSwitch implements ServerMessageSwitchUpstreamInterface,
     }
 
     private void respondAndClose(Channel channel, HttpResponse response) {
-        Channels.write(channel, response).addListener(
-                ChannelFutureListener.CLOSE);
+        channel.pipeline().write(response).addListener(ChannelFutureListener.CLOSE);
     }
 
     private void sendQueuedData(TunnelInfo state) {
@@ -119,7 +117,7 @@ class ServerMessageSwitch implements ServerMessageSwitchUpstreamInterface,
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("sending response for tunnel id " + state.tunnelId +
-                    " to " + responseChannel.getRemoteAddress());
+                    " to " + responseChannel.remoteAddress());
         }
         QueuedResponse messageToSend = queuedData.poll();
         if (messageToSend == null) {
@@ -128,17 +126,14 @@ class ServerMessageSwitch implements ServerMessageSwitchUpstreamInterface,
             return;
         }
 
-        HttpResponse response =
-                HttpTunnelMessageUtils
-                        .createRecvDataResponse(messageToSend.data);
+        HttpResponse response = HttpTunnelMessageUtils.createRecvDataResponse(messageToSend.data);
         final ChannelFuture originalFuture = messageToSend.writeFuture;
-        Channels.write(responseChannel, response).addListener(
-                new RelayedChannelFutureListener(originalFuture));
+        responseChannel.pipeline().write(response).addListener(new RelayedChannelFutureListener(originalFuture));
     }
 
     @Override
     public TunnelStatus routeInboundData(String tunnelId,
-            ChannelBuffer inboundData) {
+            ByteBuf inboundData) {
         TunnelInfo tunnel = tunnelsById.get(tunnelId);
         if (tunnel == null) {
             return TunnelStatus.CLOSED;
@@ -201,7 +196,7 @@ class ServerMessageSwitch implements ServerMessageSwitchUpstreamInterface,
     }
 
     @Override
-    public void routeOutboundData(String tunnelId, ChannelBuffer data,
+    public void routeOutboundData(String tunnelId, ByteBuf data,
             ChannelFuture writeFuture) {
         TunnelInfo tunnel = tunnelsById.get(tunnelId);
         if (tunnel == null) {
@@ -215,15 +210,15 @@ class ServerMessageSwitch implements ServerMessageSwitchUpstreamInterface,
 
         ChannelFutureAggregator aggregator =
                 new ChannelFutureAggregator(writeFuture);
-        List<ChannelBuffer> fragments =
+        List<ByteBuf> fragments =
                 WriteSplitter.split(data, HttpTunnelMessageUtils.MAX_BODY_SIZE);
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("routing outbound data for tunnel " + tunnelId);
         }
-        for (ChannelBuffer fragment: fragments) {
+        for (ByteBuf fragment: fragments) {
             ChannelFuture fragmentFuture =
-                    Channels.future(writeFuture.getChannel());
+                    Channels.future(writeFuture.channel());
             aggregator.addFuture(fragmentFuture);
             tunnel.queuedResponses.offer(new QueuedResponse(fragment,
                     fragmentFuture));
@@ -248,7 +243,7 @@ class ServerMessageSwitch implements ServerMessageSwitchUpstreamInterface,
             if (future.isSuccess()) {
                 originalFuture.setSuccess();
             } else {
-                originalFuture.setFailure(future.getCause());
+                originalFuture.setFailure(future.cause());
             }
         }
     }
@@ -271,11 +266,11 @@ class ServerMessageSwitch implements ServerMessageSwitchUpstreamInterface,
     }
 
     private static final class QueuedResponse {
-        public ChannelBuffer data;
+        public ByteBuf data;
 
         public ChannelFuture writeFuture;
 
-        QueuedResponse(ChannelBuffer data, ChannelFuture writeFuture) {
+        QueuedResponse(ByteBuf data, ChannelFuture writeFuture) {
             this.data = data;
             this.writeFuture = writeFuture;
         }

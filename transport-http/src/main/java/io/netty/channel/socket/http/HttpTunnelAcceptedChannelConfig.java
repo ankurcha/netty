@@ -15,6 +15,8 @@
  */
 package io.netty.channel.socket.http;
 
+import java.net.Socket;
+
 /**
  * Configuration the server end of an http tunnel.
  * 
@@ -32,6 +34,13 @@ public class HttpTunnelAcceptedChannelConfig extends HttpTunnelChannelConfig {
 
     // based on the values in RFC 791
     private static final int DEFAULT_TRAFFIC_CLASS = 0;
+
+    /**
+     * Creates a new instance.
+     */
+    public HttpTunnelAcceptedChannelConfig(Socket socket) {
+        super(socket);
+    }
 
     @Override
     public boolean isTcpNoDelay() {

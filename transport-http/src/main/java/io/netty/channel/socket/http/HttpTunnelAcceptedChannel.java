@@ -21,11 +21,13 @@ import static io.netty.channel.Channels.fireChannelOpen;
 
 import java.net.InetSocketAddress;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ChannelBuffer;
 import io.netty.channel.AbstractChannel;
 import io.netty.channel.ChannelFactory;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.Channels;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.SocketChannelConfig;
 
@@ -46,7 +48,7 @@ final class HttpTunnelAcceptedChannel extends AbstractChannel implements
     private final InetSocketAddress remoteAddress;
 
     protected static HttpTunnelAcceptedChannel create(
-            HttpTunnelServerChannel parent, ChannelFactory factory,
+            HttpTunnelServerChannel parent, EventLoopGroup factory,
             ChannelPipeline pipeline, HttpTunnelAcceptedChannelSink sink,
             InetSocketAddress remoteAddress,
             HttpTunnelAcceptedChannelConfig config) {
@@ -59,7 +61,7 @@ final class HttpTunnelAcceptedChannel extends AbstractChannel implements
     }
 
     private HttpTunnelAcceptedChannel(HttpTunnelServerChannel parent,
-            ChannelFactory factory, ChannelPipeline pipeline,
+            EventLoopGroup factory, ChannelPipeline pipeline,
             HttpTunnelAcceptedChannelSink sink,
             InetSocketAddress remoteAddress,
             HttpTunnelAcceptedChannelConfig config) {
@@ -102,7 +104,7 @@ final class HttpTunnelAcceptedChannel extends AbstractChannel implements
     }
 
     @Override
-    public void dataReceived(ChannelBuffer data) {
+    public void dataReceived(ByteBuf data) {
         Channels.fireMessageReceived(this, data);
     }
 

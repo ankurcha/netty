@@ -15,26 +15,25 @@
  */
 package io.netty.channel.socket.http;
 
-import java.util.List;
-
-import io.netty.buffer.ChannelBuffer;
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureAggregator;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.Channels;
-import io.netty.channel.MessageEvent;
-import io.netty.channel.SimpleChannelDownstreamHandler;
+import io.netty.channel.ChannelOutboundByteHandlerAdapter;
+
+import java.util.List;
 
 /**
  * Downstream handler which places an upper bound on the size of written
- * {@link ChannelBuffer ChannelBuffers}. If a buffer
+ * {@link io.netty.buffer.ByteBuf ByteBuf}. If a buffer
  * is bigger than the specified upper bound, the buffer is broken up
  * into two or more smaller pieces.
  * <p>
  * This is utilised by the http tunnel to smooth out the per-byte latency,
  * by placing an upper bound on HTTP request / response body sizes.
+ * </p>
  */
-public class WriteFragmenter extends SimpleChannelDownstreamHandler {
+public class WriteFragmenter extends ChannelOutboundByteHandlerAdapter {
 
     public static final String NAME = "writeFragmenter";
 
@@ -49,23 +48,26 @@ public class WriteFragmenter extends SimpleChannelDownstreamHandler {
     }
 
     @Override
-    public void writeRequested(ChannelHandlerContext ctx, MessageEvent e)
-            throws Exception {
-        ChannelBuffer data = (ChannelBuffer) e.getMessage();
+    public void flush(ChannelHandlerContext ctx, ChannelFuture future) throws Exception {
+        ByteBuf in = ctx.outboundByteBuffer();
+        ByteBuf out = ctx.nextOutboundByteBuffer();
 
-        if (data.readableBytes() <= splitThreshold) {
-            super.writeRequested(ctx, e);
-        } else {
-            List<ChannelBuffer> fragments =
-                    WriteSplitter.split(data, splitThreshold);
-            ChannelFutureAggregator aggregator =
-                    new ChannelFutureAggregator(e.getFuture());
-            for (ChannelBuffer fragment: fragments) {
-                ChannelFuture fragmentFuture =
-                        Channels.future(ctx.getChannel(), true);
-                aggregator.addFuture(fragmentFuture);
-                Channels.write(ctx, fragmentFuture, fragment);
+        while (in.readable()) {
+            if(in.readableBytes() <= splitThreshold) {
+                ctx.write(in);
+            } else {
+                List<ByteBuf> fragments = WriteSplitter.split(in, splitThreshold);
+                ChannelFutureAggregator aggregator = new ChannelFutureAggregator(future);
+                for(ByteBuf fragment: fragments) {
+                    ChannelFuture fragmentFuture = Channels.future(ctx.channel(), true);
+                    aggregator.addFuture(fragmentFuture);
+                    ctx.write(fragment, fragmentFuture);
+                }
             }
         }
+
+        in.unsafe().discardSomeReadBytes();
+        ctx.flush(future);
     }
+    
 }

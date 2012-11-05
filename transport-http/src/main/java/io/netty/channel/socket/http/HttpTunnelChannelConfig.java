@@ -15,9 +15,10 @@
  */
 package io.netty.channel.socket.http;
 
-import io.netty.channel.DefaultChannelConfig;
-import io.netty.channel.socket.SocketChannelConfig;
-import io.netty.channel.socket.nio.NioSocketChannelConfig;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.socket.DefaultSocketChannelConfig;
+
+import java.net.Socket;
 
 /**
  * Configuration for HTTP tunnels. Where possible, properties set on this configuration will
@@ -34,8 +35,7 @@ import io.netty.channel.socket.nio.NioSocketChannelConfig;
  * <tr><td>{@code "writeBufferLowWaterMark"}</td><td>{@link #setWriteBufferLowWaterMark(int)}</td></tr>
  * </table>
  */
-public abstract class HttpTunnelChannelConfig extends DefaultChannelConfig
-        implements SocketChannelConfig {
+public abstract class HttpTunnelChannelConfig extends DefaultSocketChannelConfig{
 
     /**
      * The minimum value that the high water mark may be set to, in addition to the
@@ -61,13 +61,22 @@ public abstract class HttpTunnelChannelConfig extends DefaultChannelConfig
      */
     public static final int DEFAULT_LOW_WATER_MARK = 32 * 1024;
 
-    static final String HIGH_WATER_MARK_OPTION = "writeBufferhHighWaterMark";
+    public static final ChannelOption<Boolean> HIGH_WATER_MARK_OPTION =
+            new ChannelOption<Boolean>("HIGH_WATER_MARK_OPTION");
 
-    static final String LOW_WATER_MARK_OPTION = "writeBufferLowWaterMark";
+    public static final ChannelOption<Boolean> LOW_WATER_MARK_OPTION =
+            new ChannelOption<Boolean>("LOW_WATER_MARK_OPTION");
 
     protected volatile int writeBufferLowWaterMark = DEFAULT_LOW_WATER_MARK;
 
     protected volatile int writeBufferHighWaterMark = DEFAULT_HIGH_WATER_MARK;
+
+    /**
+     * Creates a new instance.
+     */
+    public HttpTunnelChannelConfig(Socket socket) {
+        super(socket);
+    }
 
     /**
      * @return the current value (in bytes) of the high water mark.
@@ -118,7 +127,7 @@ public abstract class HttpTunnelChannelConfig extends DefaultChannelConfig
      * will return false until the buffer drops below this level. By creating a sufficient gap between the high and low
      * water marks, rapid oscillation between "write enabled" and "write disabled" can be avoided.
      *
-     * @see io.netty.channel.socket.nio.NioSocketChannelConfig#setWriteBufferLowWaterMark(int)
+     * @param level Write Buffer Level
      */
     public void setWriteBufferLowWaterMark(int level) {
         if (level >= writeBufferHighWaterMark) {
@@ -136,13 +145,15 @@ public abstract class HttpTunnelChannelConfig extends DefaultChannelConfig
     }
 
     @Override
-    public boolean setOption(String key, Object value) {
-        if (HIGH_WATER_MARK_OPTION.equals(key)) {
+    public <T> boolean setOption(ChannelOption<T> option, T value) {
+        validate(option, value);
+
+        if (option == HIGH_WATER_MARK_OPTION) {
             setWriteBufferHighWaterMark((Integer) value);
-        } else if (LOW_WATER_MARK_OPTION.equals(key)) {
+        } else if (option == LOW_WATER_MARK_OPTION) {
             setWriteBufferLowWaterMark((Integer) value);
         } else {
-            return super.setOption(key, value);
+            return super.setOption(option, value);
         }
 
         return true;

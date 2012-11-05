@@ -15,10 +15,10 @@
  */
 package io.netty.channel.socket.http;
 
-import java.net.InetSocketAddress;
-
-import io.netty.buffer.ChannelBuffer;
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
+
+import java.net.InetSocketAddress;
 
 /**
  * The interface from a TCP channel which is being used to communicate with the client
@@ -37,12 +37,13 @@ interface ServerMessageSwitchUpstreamInterface {
     /**
      * Passes some received data from a client for forwarding to the server's view
      * of the tunnel.
+     * @param tunnelId Tunnel ID
+     * @param inboundData Byte buffer with the data received
      * @return the current status of the tunnel. ALIVE indicates the tunnel is still
      * functional, CLOSED indicates it is closed and the client should be notified
      * of this (and will be forgotten after this notification).
      */
-    TunnelStatus routeInboundData(String tunnelId,
-                                  ChannelBuffer inboundData);
+    TunnelStatus routeInboundData(String tunnelId, ByteBuf inboundData);
 
     void pollOutboundData(String tunnelId, Channel responseChannel);
 

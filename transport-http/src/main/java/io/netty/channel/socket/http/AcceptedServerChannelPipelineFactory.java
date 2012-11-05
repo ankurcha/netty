@@ -16,9 +16,8 @@
 
 package io.netty.channel.socket.http;
 
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.ChannelPipelineFactory;
-import io.netty.channel.Channels;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.HttpChunkAggregator;
 import io.netty.handler.codec.http.HttpRequestDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
@@ -28,26 +27,20 @@ import io.netty.handler.codec.http.HttpResponseEncoder;
  * requests, determining their type (client sending data, client polling data, or unknown) and
  * handling them appropriately.
  */
-class AcceptedServerChannelPipelineFactory implements ChannelPipelineFactory {
+class AcceptedServerChannelPipelineFactory extends ChannelInitializer<SocketChannel> {
 
     private final ServerMessageSwitch messageSwitch;
 
-    public AcceptedServerChannelPipelineFactory(
-            ServerMessageSwitch messageSwitch) {
+    public AcceptedServerChannelPipelineFactory(ServerMessageSwitch messageSwitch) {
         this.messageSwitch = messageSwitch;
     }
 
     @Override
-    public ChannelPipeline getPipeline() throws Exception {
-        ChannelPipeline pipeline = Channels.pipeline();
-
-        pipeline.addLast("httpResponseEncoder", new HttpResponseEncoder());
-        pipeline.addLast("httpRequestDecoder", new HttpRequestDecoder());
-        pipeline.addLast("httpChunkAggregator", new HttpChunkAggregator(
-                HttpTunnelMessageUtils.MAX_BODY_SIZE));
-        pipeline.addLast("messageSwitchClient",
-                new AcceptedServerChannelRequestDispatch(messageSwitch));
-
-        return pipeline;
+    public void initChannel(SocketChannel ch) throws Exception {
+        ch.pipeline()
+                .addLast("httpResponseEncoder", new HttpResponseEncoder())
+                .addLast("httpRequestDecoder",  new HttpRequestDecoder())
+                .addLast("httpChunkAggregator", new HttpChunkAggregator(HttpTunnelMessageUtils.MAX_BODY_SIZE))
+                .addLast("messageSwitchClient", new AcceptedServerChannelRequestDispatch(messageSwitch));
     }
 }

@@ -15,74 +15,67 @@
  */
 package io.netty.channel.socket.http;
 
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
-
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.Channels;
-import io.netty.channel.MessageEvent;
-import io.netty.channel.SimpleChannelUpstreamHandler;
+import io.netty.channel.ChannelInboundMessageHandlerAdapter;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.logging.InternalLogger;
 import io.netty.logging.InternalLoggerFactory;
 
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+
 /**
  * Upstream handler which is responsible for determining whether a received HTTP request is a legal
  * tunnel request, and if so, invoking the appropriate request method on the
  * {@link ServerMessageSwitch} to service the request.
  */
-class AcceptedServerChannelRequestDispatch extends SimpleChannelUpstreamHandler {
+class AcceptedServerChannelRequestDispatch extends ChannelInboundMessageHandlerAdapter<HttpRequest> {
 
     public static final String NAME = "AcceptedServerChannelRequestDispatch";
 
-    private static final InternalLogger LOG = InternalLoggerFactory
-            .getInstance(AcceptedServerChannelRequestDispatch.class);
+    private static final InternalLogger LOG = InternalLoggerFactory.getInstance(AcceptedServerChannelRequestDispatch.class);
 
     private final ServerMessageSwitchUpstreamInterface messageSwitch;
 
-    public AcceptedServerChannelRequestDispatch(
-            ServerMessageSwitchUpstreamInterface messageSwitch) {
+    public AcceptedServerChannelRequestDispatch(ServerMessageSwitchUpstreamInterface messageSwitch) {
         this.messageSwitch = messageSwitch;
     }
 
     @Override
-    public void messageReceived(ChannelHandlerContext ctx, MessageEvent e)
-            throws Exception {
-        HttpRequest request = (HttpRequest) e.getMessage();
-
+    public void messageReceived(ChannelHandlerContext ctx, HttpRequest request) throws Exception {
         if (HttpTunnelMessageUtils.isOpenTunnelRequest(request)) {
             handleOpenTunnel(ctx);
-        } else if (HttpTunnelMessageUtils.isSendDataRequest(request)) {
+        }
+        else if (HttpTunnelMessageUtils.isSendDataRequest(request)) {
             handleSendData(ctx, request);
-        } else if (HttpTunnelMessageUtils.isReceiveDataRequest(request)) {
+        }
+        else if (HttpTunnelMessageUtils.isReceiveDataRequest(request)) {
             handleReceiveData(ctx, request);
-        } else if (HttpTunnelMessageUtils.isCloseTunnelRequest(request)) {
+        }
+        else if (HttpTunnelMessageUtils.isCloseTunnelRequest(request)) {
             handleCloseTunnel(ctx, request);
-        } else {
-            respondWithRejection(ctx, request,
-                    "invalid request to netty HTTP tunnel gateway");
+        }
+        else {
+            respondWithRejection(ctx, request, "invalid request to netty HTTP tunnel gateway");
         }
     }
 
     private void handleOpenTunnel(ChannelHandlerContext ctx) {
-        String tunnelId =
-                messageSwitch.createTunnel((InetSocketAddress) ctx.getChannel()
-                        .getRemoteAddress());
+        SocketAddress remoteAddress = ctx.channel().remoteAddress();
+        String tunnelId = messageSwitch.createTunnel((InetSocketAddress) remoteAddress);
+
         if (LOG.isDebugEnabled()) {
-            LOG.debug("open tunnel request received from " +
-                    ctx.getChannel().getRemoteAddress() + " - allocated ID " +
-                    tunnelId);
+            LOG.debug("open tunnel request received from " + remoteAddress + " - allocated ID " + tunnelId);
         }
-        respondWith(ctx,
-                HttpTunnelMessageUtils.createTunnelOpenResponse(tunnelId));
+        respondWith(ctx, HttpTunnelMessageUtils.createTunnelOpenResponse(tunnelId));
     }
 
     private void handleCloseTunnel(ChannelHandlerContext ctx,
-            HttpRequest request) {
+                                   HttpRequest request) {
         String tunnelId = checkTunnelId(request, ctx);
         if (tunnelId == null) {
             return;
@@ -118,7 +111,7 @@ class AcceptedServerChannelRequestDispatch extends SimpleChannelUpstreamHandler 
     }
 
     private void handleReceiveData(ChannelHandlerContext ctx,
-            HttpRequest request) {
+                                   HttpRequest request) {
         String tunnelId = checkTunnelId(request, ctx);
         if (tunnelId == null) {
             return;
@@ -126,7 +119,7 @@ class AcceptedServerChannelRequestDispatch extends SimpleChannelUpstreamHandler 
         if (LOG.isDebugEnabled()) {
             LOG.debug("poll data request received for tunnel " + tunnelId);
         }
-        messageSwitch.pollOutboundData(tunnelId, ctx.getChannel());
+        messageSwitch.pollOutboundData(tunnelId, ctx.channel());
     }
 
     private String checkTunnelId(HttpRequest request, ChannelHandlerContext ctx) {
@@ -146,33 +139,39 @@ class AcceptedServerChannelRequestDispatch extends SimpleChannelUpstreamHandler 
     /**
      * Sends the provided response back on the channel, returning the created ChannelFuture
      * for this operation.
+     * @param ctx ChannelHandlerContext
+     * @param response ResponseObject to be sent (outbound)
+     * @return The channel future
      */
-    private ChannelFuture respondWith(ChannelHandlerContext ctx,
-            HttpResponse response) {
-        ChannelFuture writeFuture = Channels.future(ctx.getChannel());
-        Channels.write(ctx, writeFuture, response);
+    private ChannelFuture respondWith(ChannelHandlerContext ctx, HttpResponse response) {
+
+        ChannelFuture writeFuture = Channels.future(ctx.channel());
+        ctx.nextOutboundMessageBuffer().add(response);
+        ctx.flush(writeFuture);
+        ctx.write(response, writeFuture);
         return writeFuture;
     }
 
     /**
      * Sends an HTTP 400 message back to on the channel with the specified error message, and asynchronously
      * closes the channel after this is successfully sent.
+     * @param ctx ChannelHandlerContext
+     * @param rejectedRequest HTTPRequest that was rejected
+     * @param errorMessage Error Message to be send
      */
     private void respondWithRejection(ChannelHandlerContext ctx,
-            HttpRequest rejectedRequest, String errorMessage) {
+                                      HttpRequest rejectedRequest, String errorMessage) {
         if (LOG.isWarnEnabled()) {
-            SocketAddress remoteAddress = ctx.getChannel().getRemoteAddress();
-            String tunnelId =
-                    HttpTunnelMessageUtils.extractTunnelId(rejectedRequest);
+            SocketAddress remoteAddress = ctx.channel().remoteAddress();
+            String tunnelId = HttpTunnelMessageUtils.extractTunnelId(rejectedRequest);
             if (tunnelId == null) {
                 tunnelId = "<UNKNOWN>";
             }
             LOG.warn("Rejecting request from " + remoteAddress +
-                    " representing tunnel " + tunnelId + ": " + errorMessage);
+                    " representing tunnel " + tunnelId + " : " + errorMessage);
         }
-        HttpResponse rejection =
-                HttpTunnelMessageUtils.createRejection(rejectedRequest,
-                        errorMessage);
+        HttpResponse rejection = HttpTunnelMessageUtils.createRejection(rejectedRequest, errorMessage);
         respondWith(ctx, rejection).addListener(ChannelFutureListener.CLOSE);
     }
+
 }
