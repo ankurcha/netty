@@ -13,27 +13,23 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+package io.netty.channel.socket.rxtx;
 
-package io.netty.channel.socket.http;
 
-import java.util.LinkedList;
-import java.util.Queue;
+import io.netty.bootstrap.AbstractBootstrap;
+import io.netty.channel.Channel;
+import io.netty.channel.group.ChannelGroup;
+import io.netty.channel.group.DefaultChannelGroup;
 
-import io.netty.channel.AbstractChannelSink;
-import io.netty.channel.ChannelEvent;
-import io.netty.channel.ChannelPipeline;
+public class RxtxChannelFactory implements AbstractBootstrap.ChannelFactory {
 
-/**
- * A fake channel sink for use in testing
- */
-public class FakeChannelSink extends AbstractChannelSink {
-
-    public Queue<ChannelEvent> events = new LinkedList<ChannelEvent>();
+    private final ChannelGroup channels = new DefaultChannelGroup("RXTXChannelFactory-ChannelGroup");
 
     @Override
-    public void eventSunk(ChannelPipeline pipeline, ChannelEvent e)
-            throws Exception {
-        events.add(e);
+    public Channel newChannel() {
+        // TODO: Fix this
+        RxtxChannel channel = new RxtxChannel(null, null);
+        channels.add(channel);
+        return channel;
     }
-
 }

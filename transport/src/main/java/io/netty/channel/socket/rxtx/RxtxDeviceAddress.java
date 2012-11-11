@@ -13,24 +13,29 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.channel.socket.http;
+package io.netty.channel.socket.rxtx;
 
-import io.netty.buffer.ByteBuf;
+import java.net.SocketAddress;
 
 /**
- * Interface from the server message switch and channel sink to an
- * accepted channel. Exists primarily for mock testing purposes.
- * 
-
-
-
+ * A {@link SocketAddress} subclass to wrap the serial port address of a RXTX
+ * device (e.g. COM1, /dev/ttyUSB0).
  */
-interface HttpTunnelAcceptedChannelReceiver {
+public class RxtxDeviceAddress extends SocketAddress {
 
-    void updateInterestOps(SaturationStateChange transition);
+    private static final long serialVersionUID = -2907820090993709523L;
 
-    void dataReceived(ByteBuf data);
+    private final String deviceAddress;
 
-    void clientClosed();
+    /**
+     *
+     * @param deviceAddress the address of the device (e.g. COM1, /dev/ttyUSB0, ...)
+     */
+    public RxtxDeviceAddress(String deviceAddress) {
+        this.deviceAddress = deviceAddress;
+    }
 
+    public String getDeviceAddress() {
+        return deviceAddress;
+    }
 }

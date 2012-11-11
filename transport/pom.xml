@@ -29,12 +29,24 @@
   <name>Netty/Transport</name>
 
   <dependencies>
+	<dependency>
+		<groupId>${project.groupId}</groupId>
+		<artifactId>netty-buffer</artifactId>
+		<version>${project.version}</version>
+	</dependency>
+	<!-- Servlet API - completely optional -->
+	<!-- Used for HTTP tunneling transport -->
+	<dependency>
+		<groupId>javax.servlet</groupId>
+		<artifactId>servlet-api</artifactId>
+		<optional>true</optional>
+	</dependency>
+      
     <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>netty-buffer</artifactId>
-      <version>${project.version}</version>
+      <groupId>org.rxtx</groupId>
+      <artifactId>rxtx</artifactId>
     </dependency>
-  </dependencies>
+</dependencies>
 
   <build>
     <plugins>
