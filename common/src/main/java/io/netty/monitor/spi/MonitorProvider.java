@@ -63,7 +63,7 @@ public final class MonitorProvider implements Serializable, Comparable<MonitorPr
      */
     @Override
     public int compareTo(final MonitorProvider o) {
-        return this.name.compareTo(o.name);
+        return name.compareTo(o.name);
     }
 
     /**
@@ -73,7 +73,7 @@ public final class MonitorProvider implements Serializable, Comparable<MonitorPr
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((name == null) ? 0 : name.hashCode());
+        result = prime * result + (name == null ? 0 : name.hashCode());
         return result;
     }
 
@@ -107,6 +107,6 @@ public final class MonitorProvider implements Serializable, Comparable<MonitorPr
      */
     @Override
     public String toString() {
-        return "MonitorProvider(" + name + ")";
+        return "MonitorProvider(" + name + ')';
     }
 }

@@ -15,7 +15,6 @@
  */
 package io.netty.testsuite.transport.socket;
 
-import static org.junit.Assert.*;
 import io.netty.bootstrap.AbstractBootstrap;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
@@ -26,14 +25,14 @@ import io.netty.channel.socket.DatagramChannel;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.oio.OioDatagramChannel;
 import io.netty.util.NetworkConstants;
+import org.junit.Ignore;
+import org.junit.Test;
 
 import java.net.InetSocketAddress;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
+import static org.junit.Assert.*;
 
 public class DatagramMulticastTest extends AbstractDatagramTest {
 
@@ -43,7 +42,7 @@ public class DatagramMulticastTest extends AbstractDatagramTest {
         run();
     }
 
-    public void testMulticast(AbstractBootstrap sb, AbstractBootstrap cb) throws Throwable {
+    public void testMulticast(AbstractBootstrap<?> sb, AbstractBootstrap<?> cb) throws Throwable {
         MulticastTestHandler mhandler = new MulticastTestHandler();
 
         sb.handler(new ChannelInboundMessageHandlerAdapter<DatagramPacket>() {
@@ -96,7 +95,7 @@ public class DatagramMulticastTest extends AbstractDatagramTest {
 
     }
 
-    private final class MulticastTestHandler extends ChannelInboundMessageHandlerAdapter<DatagramPacket> {
+    private static final class MulticastTestHandler extends ChannelInboundMessageHandlerAdapter<DatagramPacket> {
         private final CountDownLatch latch = new CountDownLatch(1);
 
         private boolean done;
@@ -110,7 +109,7 @@ public class DatagramMulticastTest extends AbstractDatagramTest {
                 fail = true;
             }
 
-            Assert.assertEquals(1, msg.data().readInt());
+            assertEquals(1, msg.data().readInt());
             latch.countDown();
 
             // mark the handler as done as we only are supposed to receive one message
@@ -121,7 +120,7 @@ public class DatagramMulticastTest extends AbstractDatagramTest {
             boolean success = latch.await(10, TimeUnit.SECONDS);
             if (fail) {
                 // fail if we receive an message after we are done
-                Assert.fail();
+                fail();
             }
             return success;
         }

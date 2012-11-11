@@ -126,10 +126,10 @@ public class LocalTransportThreadModelTest2 {
     }
 
     @Sharable
-    class LocalHander extends ChannelInboundMessageHandlerAdapter<Object> {
+    static class LocalHander extends ChannelInboundMessageHandlerAdapter<Object> {
         private final String name;
 
-        public volatile ChannelFuture lastWriteFuture = null;
+        public volatile ChannelFuture lastWriteFuture;
 
         public AtomicInteger count = new AtomicInteger(0);
 
@@ -141,7 +141,7 @@ public class LocalTransportThreadModelTest2 {
         @Override
         public void channelActive(ChannelHandlerContext ctx) throws Exception {
             for (int i = 0; i < messageCountPerRun; i ++) {
-                lastWriteFuture = ctx.channel().write(name + " " + i);
+                lastWriteFuture = ctx.channel().write(name + ' ' + i);
             }
         }
 

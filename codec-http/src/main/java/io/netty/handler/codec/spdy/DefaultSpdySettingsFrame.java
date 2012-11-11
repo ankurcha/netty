@@ -29,12 +29,6 @@ public class DefaultSpdySettingsFrame implements SpdySettingsFrame {
     private boolean clear;
     private final Map<Integer, Setting> settingsMap = new TreeMap<Integer, Setting>();
 
-    /**
-     * Creates a new instance.
-     */
-    public DefaultSpdySettingsFrame() {
-    }
-
     @Override
     public Set<Integer> getIds() {
         return settingsMap.keySet();
@@ -140,7 +134,7 @@ public class DefaultSpdySettingsFrame implements SpdySettingsFrame {
             Setting setting = e.getValue();
             buf.append("--> ");
             buf.append(e.getKey().toString());
-            buf.append(":");
+            buf.append(':');
             buf.append(setting.getValue());
             buf.append(" (persist value: ");
             buf.append(setting.isPersist());

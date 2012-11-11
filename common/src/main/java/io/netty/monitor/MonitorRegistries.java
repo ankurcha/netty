@@ -47,8 +47,8 @@ public final class MonitorRegistries implements Iterable<MonitorRegistry> {
         return Holder.INSTANCE;
     }
 
-    private static final class Holder {
-        private static final MonitorRegistries INSTANCE = new MonitorRegistries();
+    private interface Holder {
+        MonitorRegistries INSTANCE = new MonitorRegistries();
     }
 
     private static final ServiceLoader<MonitorRegistryFactory> FACTORIES = ServiceLoader
@@ -117,7 +117,7 @@ public final class MonitorRegistries implements Iterable<MonitorRegistry> {
         return new MonitorRegistryIterator(FACTORIES.iterator());
     }
 
-    private final class MonitorRegistryIterator implements Iterator<MonitorRegistry> {
+    private static final class MonitorRegistryIterator implements Iterator<MonitorRegistry> {
 
         private final Iterator<MonitorRegistryFactory> factories;
 
@@ -127,12 +127,12 @@ public final class MonitorRegistries implements Iterable<MonitorRegistry> {
 
         @Override
         public boolean hasNext() {
-            return this.factories.hasNext();
+            return factories.hasNext();
         }
 
         @Override
         public MonitorRegistry next() {
-            return this.factories.next().newMonitorRegistry();
+            return factories.next().newMonitorRegistry();
         }
 
         @Override

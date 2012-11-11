@@ -39,7 +39,7 @@ import io.netty.handler.ssl.SslHandler;
  */
 public abstract class SpdyOrHttpChooser extends ChannelHandlerAdapter implements ChannelInboundByteHandler {
 
-    public static enum SelectedProtocol {
+    public enum SelectedProtocol {
         SpdyVersion2,
         SpdyVersion3,
         HttpVersion1_1,
@@ -50,7 +50,7 @@ public abstract class SpdyOrHttpChooser extends ChannelHandlerAdapter implements
     private final int maxSpdyContentLength;
     private final int maxHttpContentLength;
 
-    public SpdyOrHttpChooser(int maxSpdyContentLength, int maxHttpContentLength) {
+    protected SpdyOrHttpChooser(int maxSpdyContentLength, int maxHttpContentLength) {
         this.maxSpdyContentLength = maxSpdyContentLength;
         this.maxHttpContentLength = maxHttpContentLength;
     }

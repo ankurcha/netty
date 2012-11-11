@@ -101,8 +101,8 @@ public class WebSocketClientHandshaker13 extends WebSocketClientHandshaker {
         // Get path
         URI wsURL = getWebSocketUrl();
         String path = wsURL.getPath();
-        if (wsURL.getQuery() != null && wsURL.getQuery().length() > 0) {
-            path = wsURL.getPath() + "?" + wsURL.getQuery();
+        if (wsURL.getQuery() != null && !wsURL.getQuery().isEmpty()) {
+            path = wsURL.getPath() + '?' + wsURL.getQuery();
         }
 
         // Get 16 bit nonce and base 64 encode it
@@ -130,20 +130,20 @@ public class WebSocketClientHandshaker13 extends WebSocketClientHandshaker {
         if (wsPort != 80 && wsPort != 443) {
             // if the port is not standard (80/443) its needed to add the port to the header.
             // See http://tools.ietf.org/html/rfc6454#section-6.2
-            originValue = originValue + ":" + wsPort;
+            originValue = originValue + ':' + wsPort;
         }
         request.addHeader(Names.SEC_WEBSOCKET_ORIGIN, originValue);
 
         String expectedSubprotocol = getExpectedSubprotocol();
-        if (expectedSubprotocol != null && !expectedSubprotocol.equals("")) {
+        if (expectedSubprotocol != null && !expectedSubprotocol.isEmpty()) {
             request.addHeader(Names.SEC_WEBSOCKET_PROTOCOL, expectedSubprotocol);
         }
 
         request.addHeader(Names.SEC_WEBSOCKET_VERSION, "13");
 
         if (customHeaders != null) {
-            for (String header : customHeaders.keySet()) {
-                request.addHeader(header, customHeaders.get(header));
+            for (Map.Entry<String, String> e: customHeaders.entrySet()) {
+                request.addHeader(e.getKey(), e.getValue());
             }
         }
 
@@ -182,7 +182,7 @@ public class WebSocketClientHandshaker13 extends WebSocketClientHandshaker {
      * @throws WebSocketHandshakeException
      */
     @Override
-    public void finishHandshake(Channel channel, HttpResponse response) throws WebSocketHandshakeException {
+    public void finishHandshake(Channel channel, HttpResponse response) {
         final HttpResponseStatus status = HttpResponseStatus.SWITCHING_PROTOCOLS;
 
         if (!response.getStatus().equals(status)) {
@@ -190,13 +190,13 @@ public class WebSocketClientHandshaker13 extends WebSocketClientHandshaker {
         }
 
         String upgrade = response.getHeader(Names.UPGRADE);
-        if (upgrade == null || !upgrade.equalsIgnoreCase(Values.WEBSOCKET)) {
+        if (Values.WEBSOCKET.equalsIgnoreCase(upgrade)) {
             throw new WebSocketHandshakeException("Invalid handshake response upgrade: "
                     + response.getHeader(Names.UPGRADE));
         }
 
         String connection = response.getHeader(Names.CONNECTION);
-        if (connection == null || !connection.equalsIgnoreCase(Values.UPGRADE)) {
+        if (Values.UPGRADE.equalsIgnoreCase(connection)) {
             throw new WebSocketHandshakeException("Invalid handshake response connection: "
                     + response.getHeader(Names.CONNECTION));
         }

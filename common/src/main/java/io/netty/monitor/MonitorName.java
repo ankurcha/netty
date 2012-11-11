@@ -139,7 +139,7 @@ public final class MonitorName {
         if (instance.equals(this.instance)) {
             return this;
         }
-        return new MonitorName(this.group, this.type, this.name, instance);
+        return new MonitorName(group, type, name, instance);
     }
 
     /**
@@ -193,10 +193,10 @@ public final class MonitorName {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((group == null) ? 0 : group.hashCode());
-        result = prime * result + ((instance == null) ? 0 : instance.hashCode());
-        result = prime * result + ((name == null) ? 0 : name.hashCode());
-        result = prime * result + ((type == null) ? 0 : type.hashCode());
+        result = prime * result + (group == null ? 0 : group.hashCode());
+        result = prime * result + (instance == null ? 0 : instance.hashCode());
+        result = prime * result + (name == null ? 0 : name.hashCode());
+        result = prime * result + (type == null ? 0 : type.hashCode());
         return result;
     }
 
@@ -251,7 +251,7 @@ public final class MonitorName {
      */
     @Override
     public String toString() {
-        return this.instance != null ? "Monitor(" + group + "/" + type + "/" + name + "/" + instance + ")" : "Monitor("
-                + group + "/" + type + "/" + name + ")";
+        return instance != null ? "Monitor(" + group + '/' + type + '/' + name + '/' + instance + ')' : "Monitor("
+                + group + '/' + type + '/' + name + ')';
     }
 }

@@ -45,7 +45,7 @@ class YammerEventRateMonitor implements EventRateMonitor {
      */
     @Override
     public void event() {
-        this.delegate.mark();
+        delegate.mark();
     }
 
     /**
@@ -54,7 +54,7 @@ class YammerEventRateMonitor implements EventRateMonitor {
      */
     @Override
     public void events(final long count) {
-        this.delegate.mark(count);
+        delegate.mark(count);
     }
 
     /**
@@ -62,6 +62,6 @@ class YammerEventRateMonitor implements EventRateMonitor {
      */
     @Override
     public String toString() {
-        return "YammerEventRateMonitor(delegate=" + delegate + ")";
+        return "YammerEventRateMonitor(delegate=" + delegate + ')';
     }
 }

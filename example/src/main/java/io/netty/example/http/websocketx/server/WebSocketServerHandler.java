@@ -27,7 +27,6 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundMessageHandlerAdapter;
 import io.netty.handler.codec.http.DefaultHttpResponse;
-import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
@@ -145,6 +144,6 @@ public class WebSocketServerHandler extends ChannelInboundMessageHandlerAdapter<
     }
 
     private static String getWebSocketLocation(HttpRequest req) {
-        return "ws://" + req.getHeader(HttpHeaders.Names.HOST) + WEBSOCKET_PATH;
+        return "ws://" + req.getHeader(HOST) + WEBSOCKET_PATH;
     }
 }
