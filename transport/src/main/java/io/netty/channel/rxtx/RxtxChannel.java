@@ -1,4 +1,4 @@
-package io.netty.channel.socket.rxtx;
+package io.netty.channel.rxtx;
 
 import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
@@ -25,7 +25,7 @@ import java.io.IOException;
 import java.net.SocketAddress;
 import java.util.TooManyListenersException;
 
-public class RxtxChannel extends AbstractChannel{
+public class RxtxChannel extends AbstractChannel {
 
     protected RxtxChannel(Channel parent, Integer id) {
         super(parent, id);

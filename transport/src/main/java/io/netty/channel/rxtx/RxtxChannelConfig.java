@@ -13,17 +13,22 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package io.netty.channel.socket.rxtx;
+package io.netty.channel.rxtx;
 
 import gnu.io.SerialPort;
+import io.netty.channel.ChannelOption;
 import io.netty.channel.DefaultChannelConfig;
-import io.netty.util.internal.ConversionUtil;
 
 /**
  * A configuration class for RXTX device connections.
  */
 public class RxtxChannelConfig extends DefaultChannelConfig {
-
+    
+    public static final ChannelOption<Integer> BAUD_RATE = new ChannelOption<Integer>("BAUD_RATE");
+    public static final ChannelOption<Integer> STOP_BITS = new ChannelOption<Integer>("STOP_BITS");
+    public static final ChannelOption<Integer> DATA_BITS = new ChannelOption<Integer>("DATA_BITS");
+    public static final ChannelOption<Integer> PARITY_BIT = new ChannelOption<Integer>("PARITY_BIT");
+    
     public enum Stopbits {
 
         STOPBITS_1(SerialPort.STOPBITS_1),
@@ -131,22 +136,30 @@ public class RxtxChannelConfig extends DefaultChannelConfig {
         this.paritybit = paritybit;
     }
 
+    private static int toInt(Object value) {
+        if (value instanceof Number) {
+            return ((Number) value).intValue();
+        } else {
+            return Integer.parseInt(String.valueOf(value));
+        }
+    }
+    
     @Override
-    public boolean setOption(final String key, final Object value) {
-        if (key.equals("baudrate")) {
-            setBaudrate(ConversionUtil.toInt(value));
+    public <T> boolean setOption(ChannelOption<T> option, T value) {
+        if (option == BAUD_RATE) {
+            setBaudrate(toInt(value));
             return true;
-        } else if (key.equals("stopbits")) {
+        } else if (option == STOP_BITS) {
             setStopbits((Stopbits) value);
             return true;
-        } else if (key.equals("databits")) {
+        } else if (option == DATA_BITS) {
             setDatabits((Databits) value);
             return true;
-        } else if (key.equals("paritybit")) {
+        } else if (option == PARITY_BIT) {
             setParitybit((Paritybit) value);
             return true;
         } else {
-            return super.setOption(key, value);
+            return super.setOption(option, value);
         }
     }
 
